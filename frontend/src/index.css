@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --saffron: #FF9933;
+  --white: #FFFFFF;
+  --green: #138808;
+  --navy: #000080;
+  --ashoka: #000088;
+
+  /* Theme Variables - Light Mode */
+  --bg-primary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: #cbd5e1;
+  --bg-hover: #f8fafc;
+  --chakra-opacity: 0.04;
+  --chakra-filter: invert(15%) sepia(95%) saturate(3000%) hue-rotate(200deg);
+
+  /* Indian Theme Colors */
+  --saffron-text: #E67E22;
+  --green-text: #138808;
+  --navy-text: #000080;
+}
+
+.dark {
+  /* Theme Variables - Dark Mode */
+  --bg-primary: #020617;
+  --bg-card: #0f172a;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #1e293b;
+  --bg-hover: #1e293b;
+  --chakra-opacity: 0.08;
+  --chakra-filter: brightness(2) saturate(0);
+
+  /* Indian Theme Colors - Dark Mode Adjustments */
+  --saffron-text: #faa34d;
+  --green-text: #22c55e;
+  --navy-text: #f8fafc;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  margin-left: 16rem;
+  /* matches sidebar width (w-64) */
+  width: calc(100% - 16rem);
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  padding: 2.5rem;
+}
+
+.gov-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  padding: 1.5rem;
+}
+
+.dark .gov-card {
+  background-image: linear-gradient(to bottom right, var(--bg-card), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.metric-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px var(--border-color);
+}
+
+.dark .metric-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+}
+
+.status-badge {
+  @apply px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider;
+}
+
+.status-online {
+  @apply bg-green-50 text-green-600;
+}
+
+.status-active {
+  @apply bg-blue-50 text-blue-600;
+}
+
+.status-operational {
+  @apply bg-indigo-50 text-indigo-600;
+}
+
+.status-monitoring {
+  @apply bg-orange-50 text-orange-600;
+}
+
+.signal-red {
+  @apply bg-red-600 shadow-signal-red;
+}
+
+.signal-green {
+  @apply bg-green-600 shadow-signal-green;
+}
+
+.signal-amber {
+  @apply bg-yellow-500 shadow-signal-amber;
+}
+
+.chakra-bg {
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/Ashoka_Chakra.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: var(--chakra-opacity);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 900px;
+  z-index: 0;
+  pointer-events: none;
+  animation: rotate-chakra 180s linear infinite;
+  filter: var(--chakra-filter);
+}
+
+@keyframes rotate-chakra {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Government Style Utilities */
+.text-saffron {
+  color: var(--saffron-text);
+}
+
+.text-green {
+  color: var(--green-text);
+}
+
+.text-navy {
+  color: var(--navy-text);
+}
+
+.gov-gradient-text {
+  background: linear-gradient(to bottom, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.official-card {
+  border-top: 4px solid #FF9933;
+  border-bottom: 4px solid #138808;
+}
