@@ -16,8 +16,7 @@ import {
     Moon,
     Wifi,
     BarChart3,
-    Route,
-    RefreshCw
+    Route
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';

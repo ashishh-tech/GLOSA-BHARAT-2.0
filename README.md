@@ -25,13 +25,12 @@ The project is built on a 4-Stage Enterprise Architecture:
 
 ```mermaid
 graph TD
-    Junction((Traffic Junction)) -->|CCTV Stream| PL[Perception Layer: YOLOv8/OpenCV]
-    PL -->|Density Analytics| OL[Orchestration Layer: Node.js]
-    OL -->|Storage| DB[(MongoDB)]
-    OL -->|Traffic State| AE[Advisory Engine: AI/ML Models]
+    Junction((Digital Junction)) -->|Traffic Flow| AP[AI Perception: CV Models]
+    AP -->|Density Data| OL[Orchestration Layer: Node.js]
+    OL -->|Telemetry| AE[AI Advisory Engine: ML Prediction]
     AE -->|Optimal Speed| OL
-    OL -->|Socket.io| IL[Interaction Layer: React Dashboard]
-    IL -->|HUD / Advisory| User((Driver / Authority))
+    OL -->|V2I Sync| IL[Interaction Layer: GLOSA Dashboard]
+    IL -->|Speed Advisory| User((Driver / Authority))
 ```
 
 
@@ -109,8 +108,8 @@ Unlike Western traffic management systems, GLOSA-BHARAT is built for the **India
 ## 📈 Impact & Vision
 
 - **B2G**: Traffic Monitoring as a Service (TMaaS) for Smart Cities.
-- **B2B**: Fleet optimization for logistics partners (Zomato, Swiggy, Amazon).
-- **Future**: Integration with autonomous vehicle EV platforms.
+- **Eco-Focus**: National-level carbon footprint reduction via signal optimization.
+- **Future**: Integration with autonomous vehicle EV platforms and Smart Toll systems.
 
 ---
 
