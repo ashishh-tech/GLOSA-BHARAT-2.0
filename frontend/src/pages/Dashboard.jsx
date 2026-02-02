@@ -14,7 +14,10 @@ import {
     AlertCircle,
     Sun,
     Moon,
-    Wifi
+    Wifi,
+    BarChart3,
+    Route,
+    RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
@@ -42,9 +45,7 @@ const Dashboard = () => {
         }
     }, [isDarkMode]);
 
-    const iconMap = {
-        Users, Clock, TrendingUp, Brain, MapPin
-    };
+
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -136,6 +137,15 @@ const Dashboard = () => {
         { label: 'Vehicle Throughput', value: '1,482', change: '+8.1%', icon: 'Users' },
         { label: 'Fuel Saved (Pilot)', value: '185L', change: '+12.3%', icon: 'TrendingUp' },
     ];
+
+    const iconMap = {
+        'Clock': Clock,
+        'Brain': Brain,
+        'Users': Users,
+        'TrendingUp': TrendingUp,
+        'Stats': BarChart3,
+        'Route': Route
+    };
 
     const renderContent = () => {
         if (activeTab === 'dashboard') {
@@ -267,6 +277,177 @@ const Dashboard = () => {
                         </div>
                     </section>
                 </>
+            );
+        }
+
+        if (activeTab === 'simulation') {
+            return (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <header className="mb-8">
+                        <div className="flex items-center gap-3 mb-1">
+                            <Route className="h-8 w-8 text-saffron" />
+                            <h1 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">AI Advisory Terminal</h1>
+                        </div>
+                        <p className="text-[var(--text-secondary)] font-bold text-sm uppercase tracking-wider">Predictive Signal Sync & Speed Optimization</p>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 gov-card p-0 overflow-hidden relative min-h-[500px] border-2 border-navy/20 shadow-2xl">
+                            <MapComponent
+                                junction={selectedJunction}
+                                vehiclePosition={mockPosition}
+                                distance={advisory?.distance || 500}
+                                signalStatus={advisory?.signalStatus || 'IDLE'}
+                            />
+                        </div>
+                        <div className="space-y-6">
+                            <div className={`gov-card text-center p-8 border-b-8 shadow-2xl transition-all duration-700 ${advisory?.signalStatus === 'GREEN' ? 'border-green-600' : advisory?.signalStatus === 'RED' ? 'border-red-600' : 'border-amber-500'}`}>
+                                <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Current Signal Phase</p>
+                                <div className={`w-32 h-32 rounded-full mx-auto flex flex-col items-center justify-center mb-6 ${advisory?.signalStatus === 'GREEN' ? 'bg-green-600' : advisory?.signalStatus === 'RED' ? 'bg-red-600' : 'bg-amber-600'} text-white shadow-xl`}>
+                                    <span className="text-5xl font-black">{advisory ? Math.round(advisory.secondsToChange) : "--"}</span>
+                                    <span className="text-[10px] font-black opacity-80">SECONDS</span>
+                                </div>
+                                <h3 className={`text-2xl font-black uppercase ${advisory?.signalStatus === 'GREEN' ? 'text-green-600' : advisory?.signalStatus === 'RED' ? 'text-red-600' : 'text-amber-600'}`}>
+                                    {advisory?.signalStatus || 'DETECTING...'}
+                                </h3>
+                            </div>
+
+                            <div className="gov-card bg-navy text-white p-6 border-l-8 border-saffron shadow-xl">
+                                <p className="text-[10px] font-black text-blue-300 uppercase tracking-[0.2em] mb-4">GLOSA Recommendation</p>
+                                <div className="flex items-center justify-between mb-6">
+                                    <span className="text-sm font-bold opacity-80 text-blue-50">Target Speed</span>
+                                    <span className="text-4xl font-black text-saffron">{advisory?.recommendedSpeed || '--'} <small className="text-xs opacity-60">KM/H</small></span>
+                                </div>
+                                <div className="bg-white/10 p-4 rounded-xl border border-white/10 flex items-start gap-3">
+                                    <Brain className="h-5 w-5 text-saffron shrink-0" />
+                                    <p className="text-xs font-bold leading-relaxed">{advisory?.message || "Analyzing traffic flows for optimal throughput..."}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (activeTab === 'metrics') {
+            return (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 text-slate-900 dark:text-white">
+                    <header className="mb-8">
+                        <div className="flex items-center gap-3 mb-1">
+                            <BarChart3 className="h-8 w-8 text-navy dark:text-blue-400" />
+                            <h1 className="text-3xl font-black tracking-tight">System Performance Analytics</h1>
+                        </div>
+                        <p className="text-[var(--text-secondary)] font-bold text-sm uppercase tracking-wider">Real-time Efficiency Monitoring & Throughput Data</p>
+                    </header>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {trafficMetrics.map((metric, idx) => {
+                            const Icon = iconMap[metric.icon] || TrendingUp;
+                            return (
+                                <div key={idx} className="gov-card group hover:border-navy transition-all border-navy/10">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="bg-navy/5 p-2.5 rounded-xl group-hover:bg-navy/10 transition-colors">
+                                            <Icon className="h-6 w-6 text-navy dark:text-blue-400" />
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] font-black text-slate-500 uppercase mb-1 tracking-widest">{metric.label}</p>
+                                    <h3 className="text-4xl font-black">{metric.value}</h3>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="gov-card p-8 min-h-[300px] flex flex-col justify-center border-t-4 border-t-saffron">
+                            <h3 className="text-sm font-black uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-white/10 pb-2">AI Optimization Impact</h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <div className="flex justify-between text-xs font-black uppercase mb-2">
+                                        <span>Wait Time Reduction</span>
+                                        <span className="text-green-600">88% Effectiveness</span>
+                                    </div>
+                                    <div className="h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-green-500 w-[88%]" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-xs font-black uppercase mb-2">
+                                        <span>Fuel Savings</span>
+                                        <span className="text-blue-600">74% Target</span>
+                                    </div>
+                                    <div className="h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-500 w-[74%]" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="gov-card p-8 min-h-[300px] flex flex-col items-center justify-center border-t-4 border-t-navy bg-slate-50/50 dark:bg-white/0">
+                            <div className="bg-navy text-white p-4 rounded-full mb-4">
+                                <Zap className="h-8 w-8 text-saffron" />
+                            </div>
+                            <h3 className="text-xl font-black mb-2">Real-time Throughput</h3>
+                            <p className="text-xs font-bold text-slate-500 text-center uppercase tracking-wide">Live data processing enabled via secure GOI gateway</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (activeTab === 'settings') {
+            return (
+                <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 dark:text-white">
+                    <header className="mb-8">
+                        <div className="flex items-center gap-3 mb-1">
+                            <Settings className="h-8 w-8 text-slate-400" />
+                            <h1 className="text-3xl font-black tracking-tight">Terminal Configuration</h1>
+                        </div>
+                        <p className="text-[var(--text-secondary)] font-bold text-sm uppercase tracking-wider">System Preferences & Operator Settings</p>
+                    </header>
+
+                    <div className="space-y-6">
+                        <section className="gov-card p-8">
+                            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Interface Theme</h3>
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-navy dark:bg-blue-600 text-white' : 'bg-white text-navy shadow-sm'}`}>
+                                        {isDarkMode ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-sm">{isDarkMode ? 'Dark Mode Active' : 'Light Mode Active'}</h4>
+                                        <p className="text-[10px] text-slate-500 uppercase font-bold">Optimized for high-visibility terminal viewing</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsDarkMode(!isDarkMode)}
+                                    className="bg-navy text-white px-6 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-md"
+                                >
+                                    Toggle Theme
+                                </button>
+                            </div>
+                        </section>
+
+                        <section className="gov-card p-8 border-l-8 border-blue-500">
+                            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Backend Synchronization</h3>
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                                    <span className="text-sm font-black uppercase tracking-tight">{isConnected ? 'Link Operational' : 'Link Offline'}</span>
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">v2.0.4 Platinum</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <button className="bg-slate-100 dark:bg-white/5 p-4 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200 transition-colors">
+                                    <RefreshCw className="h-4 w-4 text-navy dark:text-blue-400" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Force Re-Sync</span>
+                                </button>
+                                <button className="bg-slate-100 dark:bg-white/5 p-4 rounded-xl flex items-center justify-center gap-3 hover:bg-slate-200 transition-colors">
+                                    <Wifi className="h-4 w-4 text-navy dark:text-blue-400" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">Gateway Logs</span>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
             );
         }
 
