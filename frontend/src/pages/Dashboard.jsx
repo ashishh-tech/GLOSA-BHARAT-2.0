@@ -116,20 +116,25 @@ const Dashboard = () => {
 
     const iconStatusMap = {
         'AI Engine': Cpu,
-        'Signal Controller': Zap
+        'Signal Controller': Zap,
+        'Traffic Lights': Zap,
+        'AI System': Cpu
     };
+
+    const systemStatus = (stats?.systemStatus || [
+        { label: 'Signal Controller', status: 'online' },
+        { label: 'AI Engine', status: 'active' },
+        { label: 'GIS Mapping', status: 'operational' },
+    ]).filter(item => {
+        const label = item.label.toLowerCase();
+        return !label.includes('fleet') && !label.includes('camera');
+    });
 
     const trafficMetrics = stats?.trafficStats || [
         { label: 'Wait Time Reduction', value: '24.8%', change: '+4.2%', icon: 'Clock' },
         { label: 'AI Signal Accuracy', value: '98.2%', change: '+1.5%', icon: 'Brain' },
         { label: 'Vehicle Throughput', value: '1,482', change: '+8.1%', icon: 'Users' },
         { label: 'Fuel Saved (Pilot)', value: '185L', change: '+12.3%', icon: 'TrendingUp' },
-    ];
-
-    const systemStatus = stats?.systemStatus || [
-        { label: 'Signal Controller', status: 'online' },
-        { label: 'AI Engine', status: 'active' },
-        { label: 'GIS Mapping', status: 'operational' },
     ];
 
     const renderContent = () => {
