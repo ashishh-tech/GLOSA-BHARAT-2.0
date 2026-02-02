@@ -4,7 +4,6 @@ import {
     Play,
     RefreshCw,
     Settings,
-    Camera,
     Cpu,
     Zap,
     Users,
@@ -116,9 +115,8 @@ const Dashboard = () => {
     };
 
     const iconStatusMap = {
-        'Cameras': Camera,
-        'AI System': Cpu,
-        'Traffic Lights': Zap
+        'AI Engine': Cpu,
+        'Signal Controller': Zap
     };
 
     const trafficMetrics = stats?.trafficStats || [
