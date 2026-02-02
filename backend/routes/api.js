@@ -16,6 +16,53 @@ router.get('/junctions', async (req, res) => {
     }
 });
 
+// [NEW] Discover Nearby Real-World Junctions via OSM Overpass API
+router.post('/junctions/discover', async (req, res) => {
+    try {
+        const { lat, lng, radius = 2000 } = req.body;
+
+        console.log(`📡 Discovering signals near: ${lat}, ${lng} (Radius: ${radius}m)`);
+
+        // Overpass API Query for traffic signals
+        const overpassUrl = `https://overpass-api.de/api/interpreter?data=[out:json];node(around:${radius},${lat},${lng})[highway=traffic_signals];out body;`;
+
+        const response = await axios.get(overpassUrl);
+        const elements = response.data.elements || [];
+
+        if (elements.length === 0) {
+            return res.json({ message: 'No traffic signals found in this area.', count: 0 });
+        }
+
+        // Transform OSM data to our Junction model
+        const newJunctions = elements.map((node, index) => ({
+            id: `OSM-${node.id}`,
+            name: node.tags.name || `Signal @ ${node.lat.toFixed(4)}, ${node.lon.toFixed(4)}`,
+            lat: node.lat,
+            lng: node.lon,
+            cycle_time: 60
+        }));
+
+        // Save to DB (upsert)
+        for (const junction of newJunctions) {
+            await Junction.findOneAndUpdate(
+                { id: junction.id },
+                junction,
+                { upsert: true, new: true }
+            );
+        }
+
+        res.json({
+            message: `Successfully synced ${newJunctions.length} real-world junctions!`,
+            count: newJunctions.length,
+            junctions: newJunctions
+        });
+
+    } catch (error) {
+        console.error('Discovery error:', error.message);
+        res.status(500).json({ error: 'Failed to discover nearby junctions', details: error.message });
+    }
+});
+
 // [NEW] Dashboard Statistics Endpoint
 router.get('/stats', (req, res) => {
     // Optimized GLOSA-specific stats

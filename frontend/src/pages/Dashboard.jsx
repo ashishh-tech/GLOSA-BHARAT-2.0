@@ -29,6 +29,7 @@ const Dashboard = () => {
     const [advisory, setAdvisory] = useState(null);
     const [stats, setStats] = useState(null);
     const [isConnected, setIsConnected] = useState(true);
+    const [isDiscovering, setIsDiscovering] = useState(false);
     const [mockPosition, setMockPosition] = useState({ lat: 28.6140, lng: 77.2185 });
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -146,6 +147,45 @@ const Dashboard = () => {
         'Route': Route
     };
 
+    const handleLiveDiscovery = () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsDiscovering(true);
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+                const res = await axios.post('/api/junctions/discover', {
+                    lat: latitude,
+                    lng: longitude
+                });
+
+                // Refresh junctions
+                const refreshRes = await axios.get('/api/junctions');
+                setJunctions(refreshRes.data);
+
+                if (refreshRes.data.length > 0) {
+                    // Try to pick one of the newly discovered OSM junctions
+                    const latest = refreshRes.data.find(j => j.id.startsWith('OSM-')) || refreshRes.data[0];
+                    setSelectedJunction(latest);
+                    setMockPosition({ lat: latitude, lng: longitude });
+                    alert(`✅ ${res.data.count} Live Junctions discovered near you!`);
+                }
+            } catch (err) {
+                console.error("Discovery failed", err);
+                alert("Failed to discover nearby junctions. Check console for details.");
+            } finally {
+                setIsDiscovering(false);
+            }
+        }, (error) => {
+            console.error("Geolocation error", error);
+            alert("Could not access GPS. Please check permissions.");
+            setIsDiscovering(false);
+        });
+    };
+
     const renderContent = () => {
         if (activeTab === 'dashboard') {
             return (
@@ -170,8 +210,13 @@ const Dashboard = () => {
                             >
                                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                             </button>
-                            <button className="flex items-center gap-2 bg-navy text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:brightness-110 transition-all shadow-lg active:translate-y-0.5">
-                                <Wifi className="h-4 w-4" /> Live Sync
+                            <button
+                                onClick={handleLiveDiscovery}
+                                disabled={isDiscovering}
+                                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg active:translate-y-0.5 ${isDiscovering ? 'bg-slate-400 cursor-not-allowed' : 'bg-navy text-white hover:brightness-110'}`}
+                            >
+                                <MapPin className={`h-4 w-4 ${isDiscovering ? 'animate-bounce' : ''}`} />
+                                {isDiscovering ? 'Searching...' : 'Discover Nearby'}
                             </button>
                         </div>
                     </header>
