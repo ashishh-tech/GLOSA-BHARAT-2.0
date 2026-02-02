@@ -57,6 +57,18 @@ graph TD
 
 ---
 
+## 🍃 MongoDB Setup & Compass Connection
+
+To visualize the real-time traffic data in **MongoDB Compass**:
+
+1. **Install MongoDB**: Ensure MongoDB Community Server is installed on your Windows machine.
+2. **Open Compass**: Launch MongoDB Compass and click "New Connection".
+3. **Connection String**: Use `mongodb://127.0.0.1:27017`
+4. **Initial Data**: Run `node scripts/seed.js` inside the `backend` folder to populate initial junction data.
+5. **Database Name**: Look for the `glosa-bharat` database in the sidebar.
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites

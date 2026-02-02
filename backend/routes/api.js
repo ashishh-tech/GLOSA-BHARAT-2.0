@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const junctions = require('../data/junctions.json');
+const Junction = require('../models/Junction');
 const { calculateAdvisory, getDistance } = require('../utils/glosa');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 // List all junctions
-router.get('/junctions', (req, res) => {
-    res.json(junctions);
+router.get('/junctions', async (req, res) => {
+    try {
+        const junctions = await Junction.find();
+        res.json(junctions);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch junctions' });
+    }
 });
 
 // [NEW] Dashboard Statistics Endpoint
@@ -39,7 +44,7 @@ router.post('/advisory', async (req, res) => {
     try {
         const { junctionId, lat, lng, timestamp } = req.body;
 
-        const junction = junctions.find(j => j.id === junctionId);
+        const junction = await Junction.findOne({ id: junctionId });
         if (!junction) return res.status(404).json({ error: 'Junction not found' });
 
         // Calculate distance
