@@ -16,7 +16,10 @@ import {
     Moon,
     Wifi,
     BarChart3,
-    Route
+    Route,
+    LogOut,
+    Lock,
+    UserCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '../components/Sidebar';
@@ -30,6 +33,9 @@ const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [isConnected, setIsConnected] = useState(true);
     const [isDiscovering, setIsDiscovering] = useState(false);
+    const [user, setUser] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [authData, setAuthData] = useState({ username: '', password: '' });
     const [mockPosition, setMockPosition] = useState({ lat: 28.6140, lng: 77.2185 });
     const [currentTime, setCurrentTime] = useState(new Date());
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -46,6 +52,42 @@ const Dashboard = () => {
     }, [isDarkMode]);
 
 
+
+    useEffect(() => {
+        // Recover user from local storage
+        const savedUser = localStorage.getItem('glosaUser');
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+            setIsLoggedIn(true);
+        }
+    }, []);
+
+    // Periodic Location Sync
+    useEffect(() => {
+        if (!isLoggedIn || !user) return;
+
+        const syncLocation = () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        await axios.post('/api/user/sync-location', {
+                            username: user.username,
+                            lat: latitude,
+                            lng: longitude
+                        });
+                        console.log("📍 Location synced to MongoDB");
+                    } catch (err) {
+                        console.error("Location sync failed", err);
+                    }
+                });
+            }
+        };
+
+        syncLocation();
+        const interval = setInterval(syncLocation, 30000); // Every 30 seconds
+        return () => clearInterval(interval);
+    }, [isLoggedIn, user]);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -186,6 +228,31 @@ const Dashboard = () => {
         });
     };
 
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await axios.post('/api/auth/login', authData);
+            setUser(res.data.user);
+            setIsLoggedIn(true);
+            localStorage.setItem('glosaUser', JSON.stringify(res.data.user));
+
+            // Immediately get location after login
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    setMockPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                });
+            }
+        } catch (err) {
+            alert("Auth failed: " + (err.response?.data?.error || "Unknown error"));
+        }
+    };
+
+    const handleLogout = () => {
+        setUser(null);
+        setIsLoggedIn(false);
+        localStorage.removeItem('glosaUser');
+    };
+
     const renderContent = () => {
         if (activeTab === 'dashboard') {
             return (
@@ -200,23 +267,34 @@ const Dashboard = () => {
                             <p className="text-[var(--text-secondary)] font-bold text-sm uppercase tracking-wider">National Smart Mobility Framework • New Delhi Pilot</p>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="text-right mr-4 hidden lg:block">
-                                <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase">{currentTime.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <div className="text-right mr-4 hidden lg:block border-r pr-4 border-slate-200 dark:border-slate-800">
+                                <p className="text-[10px] font-black text-[var(--text-secondary)] uppercase">{currentTime.toLocaleDateString('en-IN', { weekday: 'long' })}</p>
                                 <p className="text-xl font-black text-navy dark:text-blue-400">{currentTime.toLocaleTimeString([], { hour12: true })}</p>
                             </div>
+
+                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-white/5 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 mr-2">
+                                <div className="bg-navy text-white p-2 rounded-lg">
+                                    <UserCircle className="h-5 w-5" />
+                                </div>
+                                <div className="pr-3">
+                                    <p className="text-[9px] font-black text-slate-500 uppercase leading-none mb-1">Active Operator</p>
+                                    <p className="text-xs font-black text-navy dark:text-blue-400 uppercase leading-none">{user?.username || 'Guest'}</p>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => setIsDarkMode(!isDarkMode)}
                                 className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 p-2.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                             >
                                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                             </button>
+
                             <button
-                                onClick={handleLiveDiscovery}
-                                disabled={isDiscovering}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg active:translate-y-0.5 ${isDiscovering ? 'bg-slate-400 cursor-not-allowed' : 'bg-navy text-white hover:brightness-110'}`}
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-red-100 transition-all border border-red-100"
                             >
-                                <MapPin className={`h-4 w-4 ${isDiscovering ? 'animate-bounce' : ''}`} />
-                                {isDiscovering ? 'Searching...' : 'Discover Nearby'}
+                                <LogOut className="h-4 w-4" />
+                                <span className="hidden sm:inline">Sign Out</span>
                             </button>
                         </div>
                     </header>
@@ -499,12 +577,78 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="dashboard-container">
-            <Sidebar isConnected={isConnected} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="min-h-screen bg-[var(--bg-primary)] dark:bg-slate-950 flex font-inter transition-colors duration-500 overflow-hidden">
+            <AnimatePresence>
+                {!isLoggedIn && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[10000] bg-navy/90 backdrop-blur-xl flex items-center justify-center p-6"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 border-t-8 border-saffron"
+                        >
+                            <div className="text-center mb-8">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" alt="GOI" className="h-16 mx-auto mb-6 dark:invert" />
+                                <h1 className="text-3xl font-black text-navy dark:text-blue-400 tracking-tight mb-2">GLOSA BHARAT</h1>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">National Smart Mobility Gateway</p>
+                            </div>
 
-            <main className="main-content relative overflow-hidden min-h-screen">
+                            <form onSubmit={handleLogin} className="space-y-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Operator ID</label>
+                                    <div className="relative">
+                                        <UserCircle className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            required
+                                            value={authData.username}
+                                            onChange={(e) => setAuthData({ ...authData, username: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 font-bold text-navy dark:text-white focus:ring-2 focus:ring-navy outline-none transition-all"
+                                            placeholder="Enter Gateway ID..."
+                                        />
+                                    </div>
+                                </div>
 
-                {renderContent()}
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">Access Terminal Key</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                        <input
+                                            type="password"
+                                            required
+                                            value={authData.password}
+                                            onChange={(e) => setAuthData({ ...authData, password: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 font-bold text-navy dark:text-white focus:ring-2 focus:ring-navy outline-none transition-all"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="w-full bg-navy text-white rounded-2xl py-4 font-black flex items-center justify-center gap-3 hover:brightness-110 shadow-xl active:scale-[0.98] transition-all"
+                                >
+                                    AUTHENTICATE GATEWAY
+                                </button>
+
+                                <p className="text-[10px] text-center text-slate-400 font-bold px-4">
+                                    Unauthorized access to National Traffic Systems is strictly monitored and recorded.
+                                </p>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <main className="flex-1 p-8 h-screen overflow-y-auto scrollbar-hide">
+                <div className="max-w-7xl mx-auto">
+                    {renderContent()}
+                </div>
             </main>
         </div>
     );

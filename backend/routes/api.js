@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const Junction = require('../models/Junction');
+const User = require('../models/User');
 const { calculateAdvisory, getDistance } = require('../utils/glosa');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
@@ -120,6 +121,44 @@ router.post('/advisory', async (req, res) => {
     } catch (error) {
         console.error('Advisory error:', error.message);
         res.status(500).json({ error: 'Failed to compute advisory', details: error.message });
+    }
+});
+
+// [NEW] Authentication Routes
+router.post('/auth/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        // Simple auth as requested: if user doesn't exist, create them
+        let user = await User.findOne({ username });
+        if (!user) {
+            user = new User({ username, password });
+            await user.save();
+        } else if (user.password !== password) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        user.lastLogin = new Date();
+        await user.save();
+
+        res.json({ message: 'Logged in successfully', user: { username: user.username, role: user.role } });
+    } catch (error) {
+        res.status(500).json({ error: 'Auth failed' });
+    }
+});
+
+// [NEW] Sync User Live Location to DB
+router.post('/user/sync-location', async (req, res) => {
+    try {
+        const { username, lat, lng } = req.body;
+        const user = await User.findOneAndUpdate(
+            { username },
+            { lastLat: lat, lastLng: lng },
+            { new: true }
+        );
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'Location synced', lat, lng });
+    } catch (error) {
+        res.status(500).json({ error: 'Sync failed' });
     }
 });
 
