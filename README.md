@@ -25,16 +25,16 @@ The project is built on a 4-Stage Enterprise Architecture:
 
 ```mermaid
 graph TD
-    Junction((Digital Junction)) -->|Traffic Flow| AP[AI Perception: CV Models]
-    AP -->|Density Data| OL[Orchestration Layer: Node.js]
-    OL -->|Telemetry| AE[AI Advisory Engine: ML Prediction]
-    AE -->|Optimal Speed| OL
-    OL -->|V2I Sync| IL[Interaction Layer: GLOSA Dashboard]
-    IL -->|Speed Advisory| User((Driver / Authority))
+    Junction((Digital Junction)) -->|"Traffic Flow"| AP["AI Perception: CV Models"]
+    AP -->|"Density Data"| OL["Orchestration Layer: Node.js"]
+    OL -->|"Telemetry"| AE["AI Advisory Engine: ML Prediction"]
+    AE -->|"Optimal Speed"| OL
+    OL -->|"V2I Sync"| IL["Interaction Layer: GLOSA Dashboard"]
+    IL -->|"Speed Advisory"| User(("Driver / Authority"))
 ```
 
 
----
+
 
 ## 🛠️ Tech Stack
 
